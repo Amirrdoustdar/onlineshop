@@ -1,0 +1,13 @@
+#text {
+    color: aliceblue;
+}
+@font-face {
+    font-family: 'IranianSans';
+    src: url('fonts/IranianSans.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+body {
+    font-family: 'IranianSans', 'Tahoma', Arial, sans-serif;
+}

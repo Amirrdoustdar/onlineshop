@@ -1,0 +1,352 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="سبد خرید شما در نارنجی شاپ - مشاهده و مدیریت محصولات انتخابی">
+    <meta name="keywords" content="سبد خرید, نارنجی شاپ, خرید اینترنتی, فروشگاه آنلاین">
+    <title>سبد خرید - نارنجی شاپ</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    
+    <style>
+        @font-face {
+            font-family: 'IranSans';
+            src: url('{% static "fonts/IranianSans.ttf" %}');
+        }
+        
+        body { 
+            font-family: 'IranSans', sans-serif; 
+            background-color: #fafafa;
+        }
+        
+        .cart-item {
+            transition: all 0.3s ease;
+        }
+        
+        .cart-item:hover {
+            background-color: #fff7ed;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 min-h-screen">
+
+    <!-- هدر -->
+    <nav class="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-30">
+        <div class="max-w-screen-xl flex items-center justify-between mx-auto p-4">
+            <div class="flex items-center gap-3">
+                <a href="{% url 'store:home' %}" class="flex items-center">
+                    <img src="../../../../media/logo/IMG_1538.PNG" class="h-8" alt="Narenji Logo" />
+                </a>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <div class="hidden sm:flex search-box bg-gray-100 rounded-lg px-4 py-2">
+                    <form action="{% url 'store:product_search' %}" method="get" class="flex items-center gap-2">
+                        <input type="text" name="q" value="{{ request.GET.q }}" 
+                               placeholder="جستجوی محصولات..." 
+                               class="bg-transparent border-none outline-none text-sm w-40">
+                        <button type="submit" class="text-gray-500 hover:text-orange-500">
+                            <i class='bx bx-search'></i>
+                        </button>
+                    </form>
+                </div>
+                
+                <div class="hidden md:flex gap-6 font-medium">
+                    <a href="{% url 'store:home' %}" class="text-gray-700 hover:text-orange-600 flex items-center gap-2">
+                        <i class='bx bx-home-alt'></i>خانه
+                    </a>
+                    <a href="{% url 'cart:cart_detail' %}" class="text-orange-500 hover:text-orange-600 flex items-center gap-2">
+                        <i class='bx bx-basket'></i>سبد خرید
+                    </a>
+                </div>
+                
+                <button id="menu-toggle" class="md:hidden p-2 text-gray-500 hover:bg-gray-100 rounded-lg">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 17 14">
+                        <path stroke="currentColor" stroke-width="2" d="M1 1h15M1 7h15M1 13h15"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- پیام‌ها -->
+    <div class="max-w-6xl mx-auto px-4 pt-6">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert mb-4 p-4 rounded-lg {% if message.tags == 'success' %}bg-green-100 text-green-800{% elif message.tags == 'error' %}bg-red-100 text-red-800{% else %}bg-blue-100 text-blue-800{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <!-- Overlay منوی موبایل -->
+    <div id="mobile-menu-overlay" class="fixed inset-0 bg-black/50 z-40 hidden"></div>
+
+    <!-- منوی موبایل -->
+    <div id="mobile-menu" class="fixed top-0 right-0 h-full w-80 bg-white shadow-2xl z-50 transform translate-x-full transition-transform duration-300">
+        <div class="flex justify-between items-center p-6 border-b bg-gradient-to-r from-orange-50 to-orange-100">
+            <span class="text-xl font-bold text-orange-600">منو نارنجی</span>
+            <button id="close-menu" class="text-gray-600 hover:text-gray-800 text-xl p-2">✖</button>
+        </div>
+        
+        <div class="p-4 border-b">
+            <form action="{% url 'store:product_search' %}" method="get" class="flex gap-2">
+                <input type="text" name="q" value="{{ request.GET.q }}" placeholder="جستجوی محصولات..." 
+                       class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                <button type="submit" class="bg-orange-500 text-white px-3 py-2 rounded-lg">
+                    <i class='bx bx-search'></i>
+                </button>
+            </form>
+        </div>
+        
+        <ul class="p-4 space-y-2">
+            <li>
+                <a href="{% url 'store:home' %}" class="flex items-center gap-3 p-3 hover:bg-orange-50 rounded-lg transition">
+                    <i class='bx bx-home-alt text-xl text-orange-500'></i>
+                    <span class="font-medium">خانه</span>
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'cart:cart_detail' %}" class="flex items-center gap-3 p-3 hover:bg-orange-50 rounded-lg transition">
+                    <i class='bx bx-basket text-xl text-orange-500'></i>
+                    <span class="font-medium">سبد خرید</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- محتوای اصلی -->
+    <div class="max-w-6xl mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold text-gray-800 mb-8">سبد خرید</h1>
+        
+        {% if cart %}
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- لیست محصولات -->
+                <div class="lg:col-span-2 space-y-4">
+                    {% for item in cart %}
+                    <div class="cart-item bg-white rounded-lg shadow-md p-4 md:p-6">
+                        <div class="flex gap-4">
+                            <!-- تصویر محصول -->
+                            <div class="flex-shrink-0">
+                                <img src="{{ item.product.get_primary_image }}" 
+                                     alt="{{ item.product.name }}"
+                                     class="w-24 h-24 md:w-32 md:h-32 object-cover rounded-lg">
+                            </div>
+                            
+                            <!-- اطلاعات محصول -->
+                            <div class="flex-1">
+                                <div class="flex justify-between items-start mb-3">
+                                    <div>
+                                        <h3 class="font-bold text-gray-800 text-lg mb-2">
+                                            <a href="{% url 'store:product_detail' item.product.slug %}" 
+                                               class="hover:text-orange-500">
+                                                {{ item.product.name }}
+                                            </a>
+                                        </h3>
+                                        
+                                        <!-- نمایش رنگ و سایز -->
+                                        {% if item.color or item.size %}
+                                        <div class="flex gap-3 text-sm text-gray-600 mb-2">
+                                            {% if item.color %}
+                                            <span class="bg-gray-100 px-3 py-1 rounded-full">
+                                                رنگ: {{ item.color.name }}
+                                            </span>
+                                            {% endif %}
+                                            {% if item.size %}
+                                            <span class="bg-gray-100 px-3 py-1 rounded-full">
+                                                سایز: {{ item.size.name }}
+                                            </span>
+                                            {% endif %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <!-- دکمه حذف -->
+                                    <form method="POST" action="{% url 'cart:cart_remove' item.product.id %}">
+                                        {% csrf_token %}
+                                        {% if item.color %}
+                                        <input type="hidden" name="color_id" value="{{ item.color.id }}">
+                                        {% endif %}
+                                        {% if item.size %}
+                                        <input type="hidden" name="size_id" value="{{ item.size.id }}">
+                                        {% endif %}
+                                        <input type="hidden" name="remove_all" value="true">
+                                        <button type="submit" 
+                                                class="text-red-500 hover:text-red-700 p-2">
+                                            <i class='bx bx-trash text-xl'></i>
+                                        </button>
+                                    </form>
+                                </div>
+                                
+                                <!-- قیمت و تعداد -->
+                                <div class="flex justify-between items-center">
+                                    <div class="flex items-center gap-3">
+                                        <!-- فرم کاهش -->
+                                        <form method="POST" action="{% url 'cart:cart_remove' item.product.id %}" class="inline">
+                                            {% csrf_token %}
+                                            {% if item.color %}
+                                            <input type="hidden" name="color_id" value="{{ item.color.id }}">
+                                            {% endif %}
+                                            {% if item.size %}
+                                            <input type="hidden" name="size_id" value="{{ item.size.id }}">
+                                            {% endif %}
+                                            <input type="hidden" name="quantity" value="1">
+                                            <button type="submit" 
+                                                    class="w-8 h-8 bg-gray-200 hover:bg-gray-300 rounded-lg flex items-center justify-center">
+                                                <i class='bx bx-minus'></i>
+                                            </button>
+                                        </form>
+                                        
+                                        <span class="font-semibold text-lg px-3">{{ item.quantity }}</span>
+                                        
+                                        <!-- فرم افزایش -->
+                                        <form method="POST" action="{% url 'cart:cart_add' item.product.id %}" class="inline">
+                                            {% csrf_token %}
+                                            {% if item.color %}
+                                            <input type="hidden" name="color_id" value="{{ item.color.id }}">
+                                            {% endif %}
+                                            {% if item.size %}
+                                            <input type="hidden" name="size_id" value="{{ item.size.id }}">
+                                            {% endif %}
+                                            <input type="hidden" name="quantity" value="1">
+                                            <button type="submit" 
+                                                    class="w-8 h-8 bg-orange-500 hover:bg-orange-600 text-white rounded-lg flex items-center justify-center">
+                                                <i class='bx bx-plus'></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                    
+                                    <div class="text-left">
+                                        <p class="text-xl font-bold text-orange-600">
+                                            {{ item.total_price|floatformat:0 }} تومان
+                                        </p>
+                                        <p class="text-sm text-gray-500">
+                                            {{ item.price|floatformat:0 }} × {{ item.quantity }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <!-- خلاصه سبد خرید -->
+                <div class="lg:col-span-1">
+                    <div class="bg-white rounded-lg shadow-md p-6 sticky top-24">
+                        <h2 class="text-xl font-bold text-gray-800 mb-6">خلاصه سبد خرید</h2>
+                        
+                        <div class="space-y-4 mb-6">
+                            <div class="flex justify-between text-gray-600">
+                                <span>تعداد کالاها:</span>
+                                <span class="font-semibold">{{ cart|length }} مورد</span>
+                            </div>
+                            
+                            <div class="flex justify-between text-gray-600">
+                                <span>جمع کل:</span>
+                                <span class="font-semibold">{{ cart.get_total_price|floatformat:0 }} تومان</span>
+                            </div>
+                            
+                            <div class="border-t pt-4">
+                                <div class="flex justify-between text-lg font-bold text-gray-800">
+                                    <span>مبلغ قابل پرداخت:</span>
+                                    <span class="text-orange-600">{{ cart.get_total_price|floatformat:0 }} تومان</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <a href="{% url 'orders:order_confirm_view' %}" 
+                           class="block w-full bg-orange-500 hover:bg-orange-600 text-white text-center font-bold py-3 rounded-lg transition duration-200 mb-3">
+                            <i class='bx bx-credit-card'></i>
+                            تکمیل خرید
+                        </a>
+                        
+                        <a href="{% url 'store:product_list' %}" 
+                           class="block w-full bg-gray-100 hover:bg-gray-200 text-gray-700 text-center font-medium py-3 rounded-lg transition duration-200">
+                            <i class='bx bx-shopping-bag'></i>
+                            ادامه خرید
+                        </a>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <!-- سبد خرید خالی -->
+            <div class="bg-white rounded-lg shadow-md p-12 text-center">
+                <div class="mb-6">
+                    <i class='bx bx-cart text-8xl text-gray-300'></i>
+                </div>
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">سبد خرید شما خالی است!</h2>
+                <p class="text-gray-600 mb-8">برای خرید محصولات به صفحه فروشگاه بروید</p>
+                <a href="{% url 'store:product_list' %}" 
+                   class="inline-block bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 px-8 rounded-lg transition duration-200">
+                    <i class='bx bx-shopping-bag'></i>
+                    مشاهده محصولات
+                </a>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- فوتر -->
+    <footer class="bg-white py-8 md:py-12 border-t border-gray-200 mt-12">
+        <div class="max-w-6xl mx-auto px-4 text-center">
+            <h2 class="text-2xl md:text-3xl font-bold text-gray-800 mb-6">نارنجی شاپ</h2>
+            
+            <div class="flex justify-center gap-4 md:gap-6 mb-6">
+                <a href="https://www.instagram.com/narenji.shopping" target="_blank" 
+                   class="w-10 h-10 md:w-12 md:h-12 bg-gray-100 text-orange-500 rounded-full flex items-center justify-center hover:bg-orange-500 hover:text-white transition">
+                    <i class='bx bxl-instagram text-xl md:text-2xl'></i>
+                </a>
+                <a href="https://t.me/narenjishopping" target="_blank" 
+                   class="w-10 h-10 md:w-12 md:h-12 bg-gray-100 text-orange-500 rounded-full flex items-center justify-center hover:bg-orange-500 hover:text-white transition">
+                    <i class='bx bxl-telegram text-xl md:text-2xl'></i>
+                </a>
+            </div>
+            
+            <p class="text-xs md:text-sm text-gray-600">© 2025 نارنجی شاپ - تمامی حقوق محفوظ است</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const menuToggle = document.getElementById('menu-toggle');
+            const mobileMenu = document.getElementById('mobile-menu');
+            const mobileMenuOverlay = document.getElementById('mobile-menu-overlay');
+            const closeMenu = document.getElementById('close-menu');
+    
+            function openMobileMenu() {
+                mobileMenu.classList.remove('translate-x-full');
+                mobileMenuOverlay.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            }
+    
+            function closeMobileMenu() {
+                mobileMenu.classList.add('translate-x-full');
+                mobileMenuOverlay.classList.add('hidden');
+                document.body.style.overflow = 'auto';
+            }
+    
+            if (menuToggle) {
+                menuToggle.addEventListener('click', openMobileMenu);
+            }
+            if (closeMenu) {
+                closeMenu.addEventListener('click', closeMobileMenu);
+            }
+            if (mobileMenuOverlay) {
+                mobileMenuOverlay.addEventListener('click', closeMobileMenu);
+            }
+    
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeMobileMenu();
+                }
+            });
+        });
+    </script>
+
+</body>
+</html>

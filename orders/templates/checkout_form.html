@@ -1,0 +1,364 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ثبت سفارش - نارنجی شاپ</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    
+    <style>
+        @font-face {
+            font-family: 'IranSans';
+            src: url('{% static "fonts/IranianSans.ttf" %}');
+        }
+        
+        body { 
+            font-family: 'IranSans', sans-serif; 
+            background-color: #fafafa;
+        }
+        
+        .form-card {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+        }
+        
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.6s ease;
+        }
+        
+        .fade-in-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .error-message {
+            color: #dc2626;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        
+        .input-error {
+            border-color: #dc2626 !important;
+            background-color: #fef2f2;
+        }
+        
+        .shipping-option {
+            transition: all 0.3s ease;
+            border: 2px solid #e5e7eb;
+        }
+        
+        .shipping-option:hover {
+            border-color: #fb923c;
+            background-color: #fff7ed;
+        }
+        
+        .shipping-option.selected {
+            border-color: #fb923c;
+            background-color: #fff7ed;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 min-h-screen">
+
+    <!-- هدر -->
+    <nav class="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-30 backdrop-blur-sm bg-white/95">
+        <div class="max-w-screen-xl flex items-center justify-between mx-auto p-4">
+            <div class="flex items-center gap-3">
+                <a href="{% url 'store:home' %}" class="flex items-center gap-2">
+                    <img src="{% static 'images/logo.png' %}" class="h-8" alt="Narenji Logo" />
+                    <span class="hidden sm:block text-xl font-bold text-orange-600">نارنجی شاپ</span>
+                </a>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <a href="{% url 'store:home' %}" class="text-orange-500 hover:text-orange-600 flex items-center gap-2 font-medium transition-colors">
+                    <i class='bx bx-home-alt'></i>
+                    <span class="hidden sm:inline">بازگشت به خانه</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- محتوای اصلی -->
+    <div class="max-w-2xl mx-auto px-4 py-8 fade-in">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-800 mb-4">📝 تکمیل اطلاعات سفارش</h1>
+            <p class="text-gray-600">لطفا اطلاعات خود را برای ارسال سفارش وارد کنید</p>
+        </div>
+
+        <!-- نمایش پیام های خطا -->
+        {% if messages %}
+        <div class="mb-6">
+            {% for message in messages %}
+            <div class="p-4 mb-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3">
+                <i class='bx bx-error text-red-500 text-xl'></i>
+                <div>
+                    <p class="text-red-800 font-medium">{{ message }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="form-card p-6 md:p-8">
+            <form method="POST" class="space-y-6" action="{% url 'orders:order_confirm_view' %}">
+                {% csrf_token %}
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="name" class="block mb-2 text-sm font-medium text-gray-700">
+                            <i class='bx bx-user text-orange-500'></i>
+                            نام کامل
+                        </label>
+                        <input type="text" name="name" id="name"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-orange-500 text-sm transition {% if form.name.errors %}input-error{% endif %}"
+                               placeholder="نام و نام خانوادگی"
+                               value="{{ form.name.value|default:'' }}"
+                               required>
+                        {% if form.name.errors %}
+                        <div class="error-message">
+                            <i class='bx bx-error-circle'></i>
+                            {{ form.name.errors.0 }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div>
+                        <label for="phone" class="block mb-2 text-sm font-medium text-gray-700">
+                            <i class='bx bx-phone text-orange-500'></i>
+                            شماره تماس
+                        </label>
+                        <input type="text" name="phone" id="phone"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-orange-500 text-sm transition {% if form.phone.errors %}input-error{% endif %}"
+                               placeholder="09xxxxxxxxx"
+                               value="{{ form.phone.value|default:'' }}"
+                               required>
+                        {% if form.phone.errors %}
+                        <div class="error-message">
+                            <i class='bx bx-error-circle'></i>
+                            {{ form.phone.errors.0 }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div>
+                    <label for="email" class="block mb-2 text-sm font-medium text-gray-700">
+                        <i class='bx bx-envelope text-orange-500'></i>
+                        ایمیل
+                    </label>
+                    <input type="email" name="email" id="email"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-orange-500 text-sm transition {% if form.email.errors %}input-error{% endif %}"
+                           placeholder="example@email.com"
+                           value="{{ form.email.value|default:'' }}"
+                           required>
+                    {% if form.email.errors %}
+                    <div class="error-message">
+                        <i class='bx bx-error-circle'></i>
+                        {{ form.email.errors.0 }}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label for="postal_code" class="block mb-2 text-sm font-medium text-gray-700">
+                        <i class='bx bx-map text-orange-500'></i>
+                        کد پستی
+                    </label>
+                    <input type="text" name="postal_code" id="postal_code"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-orange-500 text-sm transition {% if form.postal_code.errors %}input-error{% endif %}"
+                           placeholder="xxxxxxxxxx"
+                           value="{{ form.postal_code.value|default:'' }}"
+                           required>
+                    {% if form.postal_code.errors %}
+                    <div class="error-message">
+                        <i class='bx bx-error-circle'></i>
+                        {{ form.postal_code.errors.0 }}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label for="address" class="block mb-2 text-sm font-medium text-gray-700">
+                        <i class='bx bx-home text-orange-500'></i>
+                        آدرس کامل
+                    </label>
+                    <textarea name="address" id="address" rows="4"
+                              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-orange-500 text-sm transition resize-none {% if form.address.errors %}input-error{% endif %}"
+                              placeholder="آدرس کامل پستی شامل شهر، خیابان، کوچه، پلاک و ..."
+                              required>{{ form.address.value|default:'' }}</textarea>
+                    {% if form.address.errors %}
+                    <div class="error-message">
+                        <i class='bx bx-error-circle'></i>
+                        {{ form.address.errors.0 }}
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- بخش انتخاب روش ارسال -->
+                <div class="border border-gray-200 rounded-lg p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class='bx bx-package text-orange-500'></i>
+                        روش ارسال
+                    </h3>
+                    
+                    <div class="space-y-4" id="shipping-options">
+                        <!-- تیپاکس - پَس‌کرایه -->
+                        <label class="shipping-option flex items-start gap-3 p-4 border-2 border-gray-300 rounded-lg cursor-pointer transition-all">
+                            <input type="radio" name="shipping_method" value="tipax" class="mt-1 text-orange-500 focus:ring-orange-400">
+                            <div class="flex-1">
+                                <div class="flex justify-between items-center">
+                                    <span class="font-medium text-gray-800">تیپاکس</span>
+                                    <span class="text-green-600 font-semibold">پَس‌کرایه</span>
+                                </div>
+                                <p class="text-sm text-gray-600 mt-1">هزینه ارسال توسط گیرنده پرداخت می‌شود</p>
+                                <p class="text-xs text-blue-600 mt-1">تحویل: ۲ تا ۴ روز کاری</p>
+                            </div>
+                        </label>
+                        
+                        <!-- پست پیشتاز -->
+                        <label class="shipping-option flex items-start gap-3 p-4 border-2 border-gray-300 rounded-lg cursor-pointer transition-all selected">
+                            <input type="radio" name="shipping_method" value="post" class="mt-1 text-orange-500 focus:ring-orange-400" checked>
+                            <div class="flex-1">
+                                <div class="flex justify-between items-center">
+                                    <span class="font-medium text-gray-800">پست پیشتاز</span>
+                                    <span class="text-orange-600 font-semibold">۸۰,۰۰۰ تومان</span>
+                                </div>
+                                <p class="text-sm text-gray-600 mt-1">تحویل: ۴ تا ۷ روز کاری</p>
+                            </div>
+                        </label>
+                        
+                        <!-- پست ویژه -->
+                        <label class="shipping-option flex items-start gap-3 p-4 border-2 border-gray-300 rounded-lg cursor-pointer transition-all">
+                            <input type="radio" name="shipping_method" value="special_post" class="mt-1 text-orange-500 focus:ring-orange-400">
+                            <div class="flex-1">
+                                <div class="flex justify-between items-center">
+                                    <span class="font-medium text-gray-800">پست ویژه</span>
+                                    <span class="text-orange-600 font-semibold">۱۴۰,۰۰۰ تومان</span>
+                                </div>
+                                <p class="text-sm text-gray-600 mt-1">تحویل: ۲ تا ۳ روز کاری</p>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- مبلغ قابل پرداخت -->
+                <div class="p-4 bg-orange-50 rounded-lg text-center border border-orange-200">
+                    <div class="space-y-2">
+                        <div class="flex justify-between text-sm text-gray-700">
+                            <span>مبلغ کالاها:</span>
+                            <span>{{ cart.get_total_price|floatformat:0 }} تومان</span>
+                        </div>
+                        <div class="flex justify-between text-sm text-gray-700">
+                            <span>هزینه ارسال:</span>
+                            <span id="shipping-cost">۸۰,۰۰۰ تومان</span>
+                        </div>
+                        <div class="border-t border-orange-200 pt-2">
+                            <p class="text-gray-700 text-sm">مبلغ قابل پرداخت</p>
+                            <p class="text-2xl font-bold text-orange-600 mt-1" id="total-price">
+                                {{ cart.get_total_price|add:80000|floatformat:0 }} تومان
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- دکمه ارسال فرم -->
+                <div class="text-center pt-6">
+                    <button type="submit" 
+                            class="bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-lg font-semibold text-lg shadow-lg shadow-orange-200 transition duration-200 w-full md:w-auto transform hover:scale-105">
+                        <i class='bx bx-credit-card'></i>
+                        پرداخت و تکمیل سفارش
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- فوتر -->
+    <footer class="bg-white py-8 md:py-12 border-t border-gray-200 mt-12">
+        <div class="max-w-6xl mx-auto px-4 text-center">
+            <h2 class="text-2xl md:text-3xl font-bold text-gray-800 mb-6">نارنجی شاپ</h2>
+            
+            <div class="flex justify-center gap-4 md:gap-6 mb-6">
+                <a href="https://www.instagram.com/narenji.shopping" target="_blank" 
+                   class="w-10 h-10 md:w-12 md:h-12 bg-gray-100 text-orange-500 rounded-full flex items-center justify-center hover:bg-orange-500 hover:text-white transition duration-300">
+                    <i class='bx bxl-instagram text-xl md:text-2xl'></i>
+                </a>
+                <a href="https://t.me/narenjishopping" target="_blank" 
+                   class="w-10 h-10 md:w-12 md:h-12 bg-gray-100 text-orange-500 rounded-full flex items-center justify-center hover:bg-orange-500 hover:text-white transition duration-300">
+                    <i class='bx bxl-telegram text-xl md:text-2xl'></i>
+                </a>
+            </div>
+            
+            <p class="text-xs md:text-sm text-gray-600">© 2025 نارنجی شاپ - تمامی حقوق محفوظ است</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // انیمیشن fade-in
+            document.querySelector('.fade-in').classList.add('fade-in-visible');
+            
+            const shippingRadios = document.querySelectorAll('input[name="shipping_method"]');
+            const shippingCostElement = document.getElementById('shipping-cost');
+            const totalPriceElement = document.getElementById('total-price');
+            const shippingOptions = document.querySelectorAll('.shipping-option');
+            
+            // هزینه‌های ارسال
+            const shippingCosts = {
+                'tipax': 0,
+                'post': 80000,
+                'special_post': 140000
+            };
+            
+            // متنی برای نمایش پَس‌کرایه
+            const shippingTexts = {
+                'tipax': 'پَس‌کرایه',
+                'post': '۸۰,۰۰۰ تومان',
+                'special_post': '۱۴۰,۰۰۰ تومان'
+            };
+            
+            // مبلغ سبد خرید از Django
+            const subtotal = parseFloat("{{ cart.get_total_price }}");
+            
+            // فرمت کردن عدد به صورت فارسی با جداکننده
+            function formatPrice(price) {
+                if (price === 0) return 'پَس‌کرایه';
+                return new Intl.NumberFormat('fa-IR').format(price) + ' تومان';
+            }
+            
+            // مدیریت انتخاب روش ارسال
+            shippingRadios.forEach(radio => {
+                radio.addEventListener('change', function() {
+                    const selectedMethod = this.value;
+                    const shippingCost = shippingCosts[selectedMethod];
+                    const totalPrice = subtotal + shippingCost;
+                    
+                    // به‌روزرسانی استایل گزینه‌ها
+                    shippingOptions.forEach(option => {
+                        option.classList.remove('selected');
+                    });
+                    this.closest('.shipping-option').classList.add('selected');
+                    
+                    // نمایش هزینه ارسال
+                    shippingCostElement.textContent = shippingTexts[selectedMethod];
+                    
+                    // نمایش مبلغ کل
+                    totalPriceElement.textContent = formatPrice(totalPrice);
+                });
+            });
+        });
+    </script>
+</body>
+</html>
