@@ -1,0 +1,76 @@
+# .htaccess
+
+# ==================== PASSENGER CONFIGURATION ====================
+PassengerAppRoot "/home9/narenjis/narenji/narenji"
+PassengerBaseURI "/"
+PassengerPython "/home9/narenjis/virtualenv/narenji/narenji/3.9/bin/python"
+PassengerStartupFile "passenger_wsgi.py"
+
+# افزایش timeout ها برای جلوگیری از قطع connection
+PassengerMaxRequestTime 300
+PassengerPoolIdleTime 300
+PassengerMaxRequestQueueSize 100
+PassengerMaxRequests 1000
+PassengerMemoryLimit 512
+PassengerResponseBufferHighWaterMark 1073741824
+
+# برای performance بهتر
+PassengerStatThrottleRate 10
+PassengerFriendlyErrorPages off
+
+# ==================== STATIC FILES ====================
+Alias /static/ /home9/narenjis/narenji/narenji/staticfiles/
+<Directory /home9/narenjis/narenji/narenji/staticfiles>
+    Options Indexes FollowSymLinks
+    AllowOverride None
+    Require all granted
+    
+    # Cache static files
+    ExpiresActive On
+    ExpiresByType text/css "access plus 1 month"
+    ExpiresByType application/javascript "access plus 1 month"
+    ExpiresByType image/png "access plus 1 month"
+    ExpiresByType image/jpeg "access plus 1 month"
+    ExpiresByType image/webp "access plus 1 month"
+    ExpiresByType font/woff2 "access plus 1 year"
+    ExpiresByType font/woff "access plus 1 year"
+</Directory>
+
+# ==================== MEDIA FILES ====================  
+Alias /media/ /home9/narenjis/narenji/narenji/media/
+<Directory /home9/narenjis/narenji/narenji/media>
+    Options Indexes FollowSymLinks
+    AllowOverride None
+    Require all granted
+</Directory>
+
+# ==================== FONT MIME TYPES ====================
+AddType font/ttf .ttf
+AddType font/otf .otf
+AddType font/woff .woff
+AddType font/woff2 .woff2
+AddType font/eot .eot
+
+# ==================== HEADERS FOR FONTS ====================
+<FilesMatch "\.(ttf|otf|woff|woff2|eot)$">
+    Header set Access-Control-Allow-Origin "*"
+    Header set Cache-Control "max-age=31536000, public"
+</FilesMatch>
+
+# ==================== COMPRESSION ====================
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/plain
+    AddOutputFilterByType DEFLATE text/html
+    AddOutputFilterByType DEFLATE text/xml
+    AddOutputFilterByType DEFLATE text/css
+    AddOutputFilterByType DEFLATE application/xml
+    AddOutputFilterByType DEFLATE application/xhtml+xml
+    AddOutputFilterByType DEFLATE application/rss+xml
+    AddOutputFilterByType DEFLATE application/javascript
+    AddOutputFilterByType DEFLATE application/x-javascript
+    AddOutputFilterByType DEFLATE font/woff2
+</IfModule>
+
+# ==================== SERVER TIMEOUTS ====================
+Timeout 300
+ProxyTimeout 300
