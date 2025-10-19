@@ -1,0 +1,468 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سوالات متداول - نارنجی شاپ</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    
+    <style>
+        @font-face {
+            font-family: 'IranSans';
+            src: url('{% static "fonts/IranianSans.ttf" %}');
+        }
+        
+        body { 
+            font-family: 'IranSans', sans-serif; 
+            background-color: #fafafa;
+        }
+        
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.6s ease;
+        }
+        
+        .fade-in-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .faq-item {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            margin-bottom: 1rem;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .faq-question {
+            padding: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+        
+        .faq-question:hover {
+            background-color: #fff7ed;
+        }
+        
+        .faq-answer {
+            padding: 0 1.5rem;
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .faq-answer.open {
+            padding: 0 1.5rem 1.5rem;
+            max-height: 500px;
+        }
+        
+        .faq-icon {
+            transition: transform 0.3s ease;
+        }
+        
+        .faq-icon.rotated {
+            transform: rotate(180deg);
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 min-h-screen">
+
+    <!-- هدر -->
+    <nav class="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-30 backdrop-blur-sm bg-white/95">
+        <div class="max-w-screen-xl flex items-center justify-between mx-auto p-4">
+            <div class="flex items-center gap-3">
+                <button id="menu-toggle" class="md:hidden p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 17 14">
+                        <path stroke="currentColor" stroke-width="2" d="M1 1h15M1 7h15M1 13h15"/>
+                    </svg>
+                </button>
+                
+                <a href="{% url 'store:home' %}" class="flex items-center">
+                    <img src="../../../../media/logo/IMG_1538.PNG" class="h-8" alt="Narenji Logo" />
+                    <span class="hidden sm:block text-xl font-bold text-orange-600">نارنجی شاپ</span>
+                </a>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <div class="hidden sm:flex search-box bg-gray-100 rounded-lg px-4 py-2 transition-all duration-300 hover:bg-gray-200">
+                    <form action="{% url 'store:product_search' %}" method="get" class="flex items-center gap-2">
+                        <input type="text" name="q" placeholder="جستجوی محصولات..." 
+                               class="bg-transparent border-none outline-none text-sm w-40">
+                        <button type="submit" class="text-gray-500 hover:text-orange-500">
+                            <i class='bx bx-search'></i>
+                        </button>
+                    </form>
+                </div>
+                
+                <div class="flex items-center gap-3">
+                    <a href="{% url 'cart:cart_detail' %}" class="w-10 h-10 bg-gray-100 text-orange-500 rounded-full flex items-center justify-center hover:bg-orange-500 hover:text-white transition duration-300 relative">
+                        <i class='bx bx-basket'></i>
+                        {% if cart and cart|length > 0 %}
+                        <span class="absolute -top-1 -left-1 bg-orange-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center animate-pulse">
+                            {{ cart|length }}
+                        </span>
+                        {% endif %}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Overlay منوی موبایل -->
+    <div id="mobile-menu-overlay" class="fixed inset-0 bg-black/50 z-40 hidden backdrop-blur-sm"></div>
+
+    <!-- منوی موبایل -->
+    <div id="mobile-menu" class="fixed top-0 right-0 h-full w-80 bg-white shadow-2xl z-50 transform translate-x-full transition-transform duration-300">
+        <div class="flex justify-between items-center p-6 border-b bg-gradient-to-r from-orange-50 to-orange-100">
+            <span class="text-xl font-bold text-orange-600">منو نارنجی</span>
+            <button id="close-menu" class="text-gray-600 hover:text-gray-800 text-xl p-2 transition-colors">✖</button>
+        </div>
+        
+        <div class="p-4 border-b">
+            <form action="{% url 'store:product_search' %}" method="get" class="flex gap-2">
+                <input type="text" name="q" placeholder="جستجوی محصولات..." 
+                       class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400">
+                <button type="submit" class="bg-orange-500 hover:bg-orange-600 text-white px-3 py-2 rounded-lg transition-colors">
+                    <i class='bx bx-search'></i>
+                </button>
+            </form>
+        </div>
+        
+        <ul class="p-4 space-y-2">
+            <li>
+                <a href="{% url 'store:home' %}" class="flex items-center gap-3 p-3 hover:bg-orange-50 rounded-lg transition-all duration-200 group">
+                    <i class='bx bx-home-alt text-xl text-orange-500 group-hover:scale-110 transition-transform'></i>
+                    <span class="font-medium">خانه</span>
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'store:product_list' %}" class="flex items-center gap-3 p-3 hover:bg-orange-50 rounded-lg transition-all duration-200 group">
+                    <i class='bx bx-store text-xl text-orange-500 group-hover:scale-110 transition-transform'></i>
+                    <span class="font-medium">همه محصولات</span>
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'cart:cart_detail' %}" class="flex items-center gap-3 p-3 hover:bg-orange-50 rounded-lg transition-all duration-200 group">
+                    <i class='bx bx-basket text-xl text-orange-500 group-hover:scale-110 transition-transform'></i>
+                    <span class="font-medium">سبد خرید</span>
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'store:faq' %}" class="flex items-center gap-3 p-3 bg-orange-50 rounded-lg transition-all duration-200 group">
+                    <i class='bx bx-help-circle text-xl text-orange-500 group-hover:scale-110 transition-transform'></i>
+                    <span class="font-medium">سوالات متداول</span>
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'store:shopping_guide' %}" class="flex items-center gap-3 p-3 hover:bg-orange-50 rounded-lg transition-all duration-200 group">
+                    <i class='bx bx-book-open text-xl text-orange-500 group-hover:scale-110 transition-transform'></i>
+                    <span class="font-medium">راهنمای خرید</span>
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'store:contact' %}" class="flex items-center gap-3 p-3 hover:bg-orange-50 rounded-lg transition-all duration-200 group">
+                    <i class='bx bx-phone text-xl text-orange-500 group-hover:scale-110 transition-transform'></i>
+                    <span class="font-medium">تماس با ما</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- محتوای اصلی -->
+    <div class="max-w-4xl mx-auto px-4 py-8 fade-in">
+        <div class="text-center mb-12">
+            <h1 class="text-3xl font-bold text-gray-800 mb-4">❓ سوالات متداول</h1>
+            <p class="text-gray-600 text-lg">پاسخ به پرتکرارترین سوالات شما</p>
+        </div>
+
+        <!-- جستجو در سوالات -->
+        <div class="bg-white rounded-2xl shadow-lg p-6 mb-8">
+            <div class="flex items-center gap-3 mb-4">
+                <i class='bx bx-search text-2xl text-orange-500'></i>
+                <h2 class="text-xl font-semibold text-gray-800">جستجو در سوالات</h2>
+            </div>
+            <input type="text" id="faq-search" 
+                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-orange-500 text-sm"
+                   placeholder="چه سوالی دارید؟">
+        </div>
+
+        <!-- دسته‌بندی سوالات -->
+        <div class="mb-8">
+            <div class="flex flex-wrap gap-3 justify-center">
+                <button class="faq-category bg-orange-500 text-white px-4 py-2 rounded-lg font-medium transition duration-200" data-category="all">
+                    همه سوالات
+                </button>
+                <button class="faq-category bg-gray-100 text-gray-700 hover:bg-gray-200 px-4 py-2 rounded-lg font-medium transition duration-200" data-category="shopping">
+                    خرید و سفارش
+                </button>
+                <button class="faq-category bg-gray-100 text-gray-700 hover:bg-gray-200 px-4 py-2 rounded-lg font-medium transition duration-200" data-category="shipping">
+                    ارسال و تحویل
+                </button>
+                <button class="faq-category bg-gray-100 text-gray-700 hover:bg-gray-200 px-4 py-2 rounded-lg font-medium transition duration-200" data-category="payment">
+                    پرداخت
+                </button>
+                <button class="faq-category bg-gray-100 text-gray-700 hover:bg-gray-200 px-4 py-2 rounded-lg font-medium transition duration-200" data-category="return">
+                    مرجوعی و بازگشت
+                </button>
+            </div>
+        </div>
+
+        <!-- لیست سوالات -->
+        <div class="space-y-4" id="faq-list">
+            <!-- سوالات خرید و سفارش -->
+            <div class="faq-item" data-category="shopping">
+                <div class="faq-question">
+                    <h3 class="text-lg font-semibold text-gray-800 flex-1">چگونه می‌توانم سفارش دهم؟</h3>
+                    <i class='bx bx-chevron-down faq-icon text-orange-500 text-xl'></i>
+                </div>
+                <div class="faq-answer">
+                    <p class="text-gray-600 leading-7">
+                        برای ثبت سفارش مراحل زیر را دنبال کنید:<br>
+                        1. محصول مورد نظر را به سبد خرید اضافه کنید<br>
+                        2. به صفحه سبد خرید بروید و اطلاعات سفارش را تکمیل کنید<br>
+                        3. روش ارسال و پرداخت را انتخاب کنید<br>
+                        4. سفارش خود را نهایی کنید
+                    </p>
+                </div>
+            </div>
+
+            <div class="faq-item" data-category="shopping">
+                <div class="faq-question">
+                    <h3 class="text-lg font-semibold text-gray-800 flex-1">چگونه می‌توانم سفارش خود را پیگیری کنم؟</h3>
+                    <i class='bx bx-chevron-down faq-icon text-orange-500 text-xl'></i>
+                </div>
+                <div class="faq-answer">
+                    <p class="text-gray-600 leading-7">
+                        پس از ثبت سفارش، یک کد پیگیری برای شما ارسال می‌شود. می‌توانید با این کد وضعیت سفارش خود را در بخش "پیگیری سفارش" مشاهده کنید. همچنین در هر مرحله از فرآیند ارسال، پیامک اطلاع‌رسانی برای شما ارسال خواهد شد.
+                    </p>
+                </div>
+            </div>
+
+            <!-- سوالات ارسال و تحویل -->
+            <div class="faq-item" data-category="shipping">
+                <div class="faq-question">
+                    <h3 class="text-lg font-semibold text-gray-800 flex-1">مدت زمان ارسال سفارش چقدر است؟</h3>
+                    <i class='bx bx-chevron-down faq-icon text-orange-500 text-xl'></i>
+                </div>
+                <div class="faq-answer">
+                    <p class="text-gray-600 leading-7">
+                        مدت زمان ارسال بستگی به روش ارسال انتخاب شده دارد:<br>
+                        • پست پیشتاز: ۴ تا ۷ روز کاری<br>
+                        • پست ویژه: ۲ تا ۳ روز کاری<br>
+                        • تیپاکس: ۲ تا ۴ روز کاری<br>
+                        سفارشات تهران معمولاً زودتر تحویل داده می‌شوند.
+                    </p>
+                </div>
+            </div>
+
+            <div class="faq-item" data-category="shipping">
+                <div class="faq-question">
+                    <h3 class="text-lg font-semibold text-gray-800 flex-1">هزینه ارسال چقدر است؟</h3>
+                    <i class='bx bx-chevron-down faq-icon text-orange-500 text-xl'></i>
+                </div>
+                <div class="faq-answer">
+                    <p class="text-gray-600 leading-7">
+                        هزینه ارسال بستگی به روش ارسال و وزن سفارش دارد. برای خریدهای بالای ۲۰۰ هزار تومان، ارسال رایگان ارائه می‌شود. می‌توانید هزینه دقیق ارسال را در صفحه سبد خرید مشاهده کنید.
+                    </p>
+                </div>
+            </div>
+
+            <!-- سوالات پرداخت -->
+            <div class="faq-item" data-category="payment">
+                <div class="faq-question">
+                    <h3 class="text-lg font-semibold text-gray-800 flex-1">چه روش‌های پرداختی پشتیبانی می‌شود؟</h3>
+                    <i class='bx bx-chevron-down faq-icon text-orange-500 text-xl'></i>
+                </div>
+                <div class="faq-answer">
+                    <p class="text-gray-600 leading-7">
+                        ما روش‌های پرداخت متنوعی را پشتیبانی می‌کنیم:<br>
+                        • پرداخت آنلاین با کارت‌های شتاب<br>
+                        • پرداخت در محل (پس کرایه)<br>
+                        • انتقال کارت به کارت<br>
+                        • کیف پول الکترونیکی
+                    </p>
+                </div>
+            </div>
+
+            <!-- سوالات مرجوعی -->
+            <div class="faq-item" data-category="return">
+                <div class="faq-question">
+                    <h3 class="text-lg font-semibold text-gray-800 flex-1">شرایط مرجوعی کالا چگونه است؟</h3>
+                    <i class='bx bx-chevron-down faq-icon text-orange-500 text-xl'></i>
+                </div>
+                <div class="faq-answer">
+                    <p class="text-gray-600 leading-7">
+                        شما ۷ روز فرصت دارید تا در صورت عدم رضایت از کالا، آن را مرجوع کنید. شرایط مرجوعی:<br>
+                        • کالا باید سالم و بدون استفاده باشد<br>
+                        • بسته‌بندی اصلی حفظ شده باشد<br>
+                        • کلیه لوازم و accessories همراه کالا باشد<br>
+                        • هزینه ارسال مرجوعی بر عهده مشتری است
+                    </p>
+                </div>
+            </div>
+
+            <!-- سوالات عمومی -->
+            <div class="faq-item" data-category="general">
+                <div class="faq-question">
+                    <h3 class="text-lg font-semibold text-gray-800 flex-1">ساعت کاری پشتیبانی چه زمانی است؟</h3>
+                    <i class='bx bx-chevron-down faq-icon text-orange-500 text-xl'></i>
+                </div>
+                <div class="faq-answer">
+                    <p class="text-gray-600 leading-7">
+                        پشتیبانی نارنجی شاپ به صورت ۲۴ ساعته و در ۷ روز هفته پاسخگوی شماست. می‌توانید از طریق:<br>
+                        • تلفن: ۰۲۱-۱۲۳۴۵۶۷۸<br>
+                        • واتساپ: ۰۹۱۲۳۴۵۶۷۸۹<br>
+                        • ایمیل: support@narenjishop.com<br>
+                        با ما در ارتباط باشید.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- بخش سوال جدید -->
+        <div class="bg-white rounded-2xl shadow-lg p-8 mt-12 text-center">
+            <i class='bx bx-message-rounded text-6xl text-orange-500 mb-4'></i>
+            <h3 class="text-2xl font-bold text-gray-800 mb-4">پاسخ خود را پیدا نکردید؟</h3>
+            <p class="text-gray-600 mb-6">می‌توانید سوال خود را از طریق بخش تماس با ما بپرسید</p>
+            <a href="{% url 'store:contact' %}" 
+               class="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 px-6 rounded-lg transition duration-200 transform hover:scale-105">
+                <i class='bx bx-phone'></i>
+                تماس با پشتیبانی
+            </a>
+        </div>
+    </div>
+
+    <!-- فوتر -->
+    <footer class="bg-white py-8 md:py-12 border-t border-gray-200 mt-12">
+        <div class="max-w-6xl mx-auto px-4 text-center">
+            <h2 class="text-2xl md:text-3xl font-bold text-gray-800 mb-6">نارنجی شاپ</h2>
+            
+            <div class="flex justify-center gap-4 md:gap-6 mb-6">
+                <a href="https://www.instagram.com/narenji.shopping" target="_blank" 
+                   class="w-10 h-10 md:w-12 md:h-12 bg-gray-100 text-orange-500 rounded-full flex items-center justify-center hover:bg-orange-500 hover:text-white transition duration-300">
+                    <i class='bx bxl-instagram text-xl md:text-2xl'></i>
+                </a>
+                <a href="https://t.me/narenjishopping" target="_blank" 
+                   class="w-10 h-10 md:w-12 md:h-12 bg-gray-100 text-orange-500 rounded-full flex items-center justify-center hover:bg-orange-500 hover:text-white transition duration-300">
+                    <i class='bx bxl-telegram text-xl md:text-2xl'></i>
+                </a>
+            </div>
+            
+            <p class="text-xs md:text-sm text-gray-600">© 2025 نارنجی شاپ - تمامی حقوق محفوظ است</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // مدیریت منوی موبایل
+            const menuToggle = document.getElementById('menu-toggle');
+            const mobileMenu = document.getElementById('mobile-menu');
+            const mobileMenuOverlay = document.getElementById('mobile-menu-overlay');
+            const closeMenu = document.getElementById('close-menu');
+
+            function openMobileMenu() {
+                mobileMenu.classList.remove('translate-x-full');
+                mobileMenuOverlay.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            }
+
+            function closeMobileMenu() {
+                mobileMenu.classList.add('translate-x-full');
+                mobileMenuOverlay.classList.add('hidden');
+                document.body.style.overflow = 'auto';
+            }
+
+            if (menuToggle) menuToggle.addEventListener('click', openMobileMenu);
+            if (closeMenu) closeMenu.addEventListener('click', closeMobileMenu);
+            if (mobileMenuOverlay) mobileMenuOverlay.addEventListener('click', closeMobileMenu);
+
+            // انیمیشن fade-in
+            document.querySelector('.fade-in').classList.add('fade-in-visible');
+
+            // مدیریت FAQ
+            const faqQuestions = document.querySelectorAll('.faq-question');
+            
+            faqQuestions.forEach(question => {
+                question.addEventListener('click', function() {
+                    const answer = this.nextElementSibling;
+                    const icon = this.querySelector('.faq-icon');
+                    
+                    // بستن بقیه سوالات
+                    faqQuestions.forEach(otherQuestion => {
+                        if (otherQuestion !== this) {
+                            const otherAnswer = otherQuestion.nextElementSibling;
+                            const otherIcon = otherQuestion.querySelector('.faq-icon');
+                            otherAnswer.classList.remove('open');
+                            otherIcon.classList.remove('rotated');
+                        }
+                    });
+                    
+                    // باز/بستن سوال جاری
+                    answer.classList.toggle('open');
+                    icon.classList.toggle('rotated');
+                });
+            });
+
+            // جستجو در FAQ
+            const searchInput = document.getElementById('faq-search');
+            const faqItems = document.querySelectorAll('.faq-item');
+            
+            searchInput.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                
+                faqItems.forEach(item => {
+                    const question = item.querySelector('.faq-question h3').textContent.toLowerCase();
+                    const answer = item.querySelector('.faq-answer').textContent.toLowerCase();
+                    
+                    if (question.includes(searchTerm) || answer.includes(searchTerm)) {
+                        item.style.display = 'block';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+            });
+
+            // فیلتر دسته‌بندی
+            const categoryButtons = document.querySelectorAll('.faq-category');
+            
+            categoryButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const category = this.getAttribute('data-category');
+                    
+                    // آپدیت استایل دکمه‌ها
+                    categoryButtons.forEach(btn => {
+                        btn.classList.remove('bg-orange-500', 'text-white');
+                        btn.classList.add('bg-gray-100', 'text-gray-700', 'hover:bg-gray-200');
+                    });
+                    this.classList.remove('bg-gray-100', 'text-gray-700', 'hover:bg-gray-200');
+                    this.classList.add('bg-orange-500', 'text-white');
+                    
+                    // فیلتر آیتم‌ها
+                    faqItems.forEach(item => {
+                        if (category === 'all' || item.getAttribute('data-category') === category) {
+                            item.style.display = 'block';
+                        } else {
+                            item.style.display = 'none';
+                        }
+                    });
+                });
+            });
+
+            // بستن منو با کلید ESC
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') closeMobileMenu();
+            });
+        });
+    </script>
+</body>
+</html>

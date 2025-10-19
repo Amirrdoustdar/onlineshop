@@ -1,0 +1,443 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تماس با ما - نارنجی شاپ</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    
+    <style>
+        @font-face {
+            font-family: 'IranSans';
+            src: url('{% static "fonts/IranianSans.ttf" %}');
+        }
+        
+        body { 
+            font-family: 'IranSans', sans-serif; 
+            background-color: #fafafa;
+        }
+        
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.6s ease;
+        }
+        
+        .fade-in-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .contact-card {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            padding: 2rem;
+            transition: all 0.3s ease;
+        }
+        
+        .contact-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+        }
+        
+        .form-input {
+            @apply w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-orange-500 text-sm transition duration-200;
+        }
+        
+        .error-message {
+            color: #dc2626;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 min-h-screen">
+
+    <!-- هدر -->
+    <nav class="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-30 backdrop-blur-sm bg-white/95">
+        <div class="max-w-screen-xl flex items-center justify-between mx-auto p-4">
+            <div class="flex items-center gap-3">
+                <button id="menu-toggle" class="md:hidden p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 17 14">
+                        <path stroke="currentColor" stroke-width="2" d="M1 1h15M1 7h15M1 13h15"/>
+                    </svg>
+                </button>
+                
+                <a href="{% url 'store:home' %}" class="flex items-center">
+                    <img src="../../../../media/logo/IMG_1538.PNG" class="h-8" alt="Narenji Logo" />
+                    <span class="hidden sm:block text-xl font-bold text-orange-600">نارنجی شاپ</span>
+                </a>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <div class="hidden sm:flex search-box bg-gray-100 rounded-lg px-4 py-2 transition-all duration-300 hover:bg-gray-200">
+                    <form action="{% url 'store:product_search' %}" method="get" class="flex items-center gap-2">
+                        <input type="text" name="q" placeholder="جستجوی محصولات..." 
+                               class="bg-transparent border-none outline-none text-sm w-40">
+                        <button type="submit" class="text-gray-500 hover:text-orange-500">
+                            <i class='bx bx-search'></i>
+                        </button>
+                    </form>
+                </div>
+                
+                <div class="flex items-center gap-3">
+                    <a href="{% url 'cart:cart_detail' %}" class="w-10 h-10 bg-gray-100 text-orange-500 rounded-full flex items-center justify-center hover:bg-orange-500 hover:text-white transition duration-300 relative">
+                        <i class='bx bx-basket'></i>
+                        {% if cart and cart|length > 0 %}
+                        <span class="absolute -top-1 -left-1 bg-orange-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center animate-pulse">
+                            {{ cart|length }}
+                        </span>
+                        {% endif %}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Overlay منوی موبایل -->
+    <div id="mobile-menu-overlay" class="fixed inset-0 bg-black/50 z-40 hidden backdrop-blur-sm"></div>
+
+    <!-- منوی موبایل -->
+    <div id="mobile-menu" class="fixed top-0 right-0 h-full w-80 bg-white shadow-2xl z-50 transform translate-x-full transition-transform duration-300">
+        <div class="flex justify-between items-center p-6 border-b bg-gradient-to-r from-orange-50 to-orange-100">
+            <span class="text-xl font-bold text-orange-600">منو نارنجی</span>
+            <button id="close-menu" class="text-gray-600 hover:text-gray-800 text-xl p-2 transition-colors">✖</button>
+        </div>
+        
+        <div class="p-4 border-b">
+            <form action="{% url 'store:product_search' %}" method="get" class="flex gap-2">
+                <input type="text" name="q" placeholder="جستجوی محصولات..." 
+                       class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400">
+                <button type="submit" class="bg-orange-500 hover:bg-orange-600 text-white px-3 py-2 rounded-lg transition-colors">
+                    <i class='bx bx-search'></i>
+                </button>
+            </form>
+        </div>
+        
+        <ul class="p-4 space-y-2">
+            <li>
+                <a href="{% url 'store:home' %}" class="flex items-center gap-3 p-3 hover:bg-orange-50 rounded-lg transition-all duration-200 group">
+                    <i class='bx bx-home-alt text-xl text-orange-500 group-hover:scale-110 transition-transform'></i>
+                    <span class="font-medium">خانه</span>
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'store:product_list' %}" class="flex items-center gap-3 p-3 hover:bg-orange-50 rounded-lg transition-all duration-200 group">
+                    <i class='bx bx-store text-xl text-orange-500 group-hover:scale-110 transition-transform'></i>
+                    <span class="font-medium">همه محصولات</span>
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'cart:cart_detail' %}" class="flex items-center gap-3 p-3 hover:bg-orange-50 rounded-lg transition-all duration-200 group">
+                    <i class='bx bx-basket text-xl text-orange-500 group-hover:scale-110 transition-transform'></i>
+                    <span class="font-medium">سبد خرید</span>
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'store:faq' %}" class="flex items-center gap-3 p-3 hover:bg-orange-50 rounded-lg transition-all duration-200 group">
+                    <i class='bx bx-help-circle text-xl text-orange-500 group-hover:scale-110 transition-transform'></i>
+                    <span class="font-medium">سوالات متداول</span>
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'store:shopping_guide' %}" class="flex items-center gap-3 p-3 hover:bg-orange-50 rounded-lg transition-all duration-200 group">
+                    <i class='bx bx-book-open text-xl text-orange-500 group-hover:scale-110 transition-transform'></i>
+                    <span class="font-medium">راهنمای خرید</span>
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'store:contact' %}" class="flex items-center gap-3 p-3 bg-orange-50 rounded-lg transition-all duration-200 group">
+                    <i class='bx bx-phone text-xl text-orange-500 group-hover:scale-110 transition-transform'></i>
+                    <span class="font-medium">تماس با ما</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- محتوای اصلی -->
+    <div class="max-w-6xl mx-auto px-4 py-8 fade-in">
+        <div class="text-center mb-12">
+            <h1 class="text-3xl font-bold text-gray-800 mb-4">📞 تماس با نارنجی شاپ</h1>
+            <p class="text-gray-600 text-lg">ما اینجا هستیم تا به سوالات شما پاسخ دهیم</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+            <!-- اطلاعات تماس -->
+            <div class="lg:col-span-1 space-y-6">
+                <!-- تماس تلفنی -->
+                <div class="contact-card text-center">
+                    <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class='bx bx-phone text-3xl text-orange-500'></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">تماس تلفنی</h3>
+                    <p class="text-gray-600 mb-4">پاسخگویی ۲۴ ساعته</p>
+                    <a href="tel:02112345678" class="text-2xl font-bold text-orange-600 hover:text-orange-700 transition-colors">
+                        ۰۲۱-۱۲۳۴۵۶۷۸
+                    </a>
+                </div>
+
+                <!-- واتساپ -->
+                <div class="contact-card text-center">
+                    <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class='bx bxl-whatsapp text-3xl text-green-500'></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">پشتیبانی واتساپ</h3>
+                    <p class="text-gray-600 mb-4">پاسخ سریع در واتساپ</p>
+                    <a href="https://wa.me/989123456789" target="_blank" 
+                       class="inline-flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-200">
+                        <i class='bx bxl-whatsapp'></i>
+                        ارسال پیام
+                    </a>
+                </div>
+
+                <!-- ایمیل -->
+                <div class="contact-card text-center">
+                    <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class='bx bx-envelope text-3xl text-blue-500'></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">ایمیل</h3>
+                    <p class="text-gray-600 mb-4">پاسخ در ۲۴ ساعت</p>
+                    <a href="mailto:support@narenjishop.com" 
+                       class="text-lg text-blue-600 hover:text-blue-700 transition-colors font-medium">
+                        support@narenjishop.com
+                    </a>
+                </div>
+            </div>
+
+            <!-- فرم تماس -->
+            <div class="lg:col-span-2">
+                <div class="contact-card">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">ارسال پیام</h2>
+                    
+                    {% if messages %}
+                    <div class="mb-6">
+                        {% for message in messages %}
+                        <div class="p-4 mb-3 rounded-lg flex items-center gap-3 {% if message.tags == 'success' %}bg-green-50 border border-green-200 text-green-800{% else %}bg-red-50 border border-red-200 text-red-800{% endif %}">
+                            <i class='bx {% if message.tags == "success" %}bx-check-circle{% else %}bx-error{% endif %} text-xl'></i>
+                            <div>
+                                <p class="font-medium">{{ message }}</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <form method="post" class="space-y-6">
+                        {% csrf_token %}
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="name" class="block mb-2 text-sm font-medium text-gray-700">
+                                    نام کامل *
+                                </label>
+                                <input type="text" name="name" id="name" 
+                                       class="form-input {% if form.name.errors %}border-red-300 bg-red-50{% endif %}"
+                                       placeholder="نام و نام خانوادگی"
+                                       value="{{ form.name.value|default:'' }}"
+                                       required>
+                                {% if form.name.errors %}
+                                <div class="error-message">
+                                    <i class='bx bx-error-circle'></i>
+                                    {{ form.name.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <div>
+                                <label for="email" class="block mb-2 text-sm font-medium text-gray-700">
+                                    ایمیل *
+                                </label>
+                                <input type="email" name="email" id="email" 
+                                       class="form-input {% if form.email.errors %}border-red-300 bg-red-50{% endif %}"
+                                       placeholder="example@email.com"
+                                       value="{{ form.email.value|default:'' }}"
+                                       required>
+                                {% if form.email.errors %}
+                                <div class="error-message">
+                                    <i class='bx bx-error-circle'></i>
+                                    {{ form.email.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="phone" class="block mb-2 text-sm font-medium text-gray-700">
+                                شماره تماس
+                            </label>
+                            <input type="tel" name="phone" id="phone" 
+                                   class="form-input {% if form.phone.errors %}border-red-300 bg-red-50{% endif %}"
+                                   placeholder="09xxxxxxxxx"
+                                   value="{{ form.phone.value|default:'' }}">
+                            {% if form.phone.errors %}
+                            <div class="error-message">
+                                <i class='bx bx-error-circle'></i>
+                                {{ form.phone.errors.0 }}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div>
+                            <label for="subject" class="block mb-2 text-sm font-medium text-gray-700">
+                                موضوع *
+                            </label>
+                            <select name="subject" id="subject" 
+                                    class="form-input {% if form.subject.errors %}border-red-300 bg-red-50{% endif %}"
+                                    required>
+                                <option value="">انتخاب موضوع</option>
+                                <option value="پیشنهاد">پیشنهاد و انتقاد</option>
+                                <option value="پشتیبانی">پشتیبانی فنی</option>
+                                <option value="سفارش">پیگیری سفارش</option>
+                                <option value="همکاری">درخواست همکاری</option>
+                                <option value="دیگر">سایر</option>
+                            </select>
+                            {% if form.subject.errors %}
+                            <div class="error-message">
+                                <i class='bx bx-error-circle'></i>
+                                {{ form.subject.errors.0 }}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div>
+                            <label for="message" class="block mb-2 text-sm font-medium text-gray-700">
+                                پیام شما *
+                            </label>
+                            <textarea name="message" id="message" rows="6"
+                                      class="form-input resize-none {% if form.message.errors %}border-red-300 bg-red-50{% endif %}"
+                                      placeholder="پیام خود را اینجا بنویسید..."
+                                      required>{{ form.message.value|default:'' }}</textarea>
+                            {% if form.message.errors %}
+                            <div class="error-message">
+                                <i class='bx bx-error-circle'></i>
+                                {{ form.message.errors.0 }}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <button type="submit" 
+                                class="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-4 rounded-lg transition duration-200 transform hover:scale-105 shadow-lg shadow-orange-200">
+                            <i class='bx bx-send'></i>
+                            ارسال پیام
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- اطلاعات بیشتر -->
+        <div class="bg-white rounded-2xl shadow-lg p-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">اطلاعات بیشتر</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class='bx bx-time text-orange-500'></i>
+                        ساعت کاری
+                    </h3>
+                    <div class="text-gray-600 space-y-2">
+                        <p>• پشتیبانی تلفنی: ۲۴ ساعته</p>
+                        <p>• پاسخگویی واتساپ: ۸ صبح تا ۱۲ شب</p>
+                        <p>• پاسخ ایمیل: حداکثر ۲۴ ساعت</p>
+                        <p>• تمامی روزهای هفته</p>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class='bx bx-map text-orange-500'></i>
+                        آدرس دفتر مرکزی
+                    </h3>
+                    <div class="text-gray-600">
+                        <p>تهران، خیابان ولیعصر، پلاک ۱۲۳۴</p>
+                        <p>طبقه ۳، واحد ۵</p>
+                        <p>کد پستی: ۱۲۳۴۵۶۷۸۹۰</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- فوتر -->
+    <footer class="bg-white py-8 md:py-12 border-t border-gray-200 mt-12">
+        <div class="max-w-6xl mx-auto px-4 text-center">
+            <h2 class="text-2xl md:text-3xl font-bold text-gray-800 mb-6">نارنجی شاپ</h2>
+            
+            <div class="flex justify-center gap-4 md:gap-6 mb-6">
+                <a href="https://www.instagram.com/narenji.shopping" target="_blank" 
+                   class="w-10 h-10 md:w-12 md:h-12 bg-gray-100 text-orange-500 rounded-full flex items-center justify-center hover:bg-orange-500 hover:text-white transition duration-300">
+                    <i class='bx bxl-instagram text-xl md:text-2xl'></i>
+                </a>
+                <a href="https://t.me/narenjishopping" target="_blank" 
+                   class="w-10 h-10 md:w-12 md:h-12 bg-gray-100 text-orange-500 rounded-full flex items-center justify-center hover:bg-orange-500 hover:text-white transition duration-300">
+                    <i class='bx bxl-telegram text-xl md:text-2xl'></i>
+                </a>
+            </div>
+            
+            <p class="text-xs md:text-sm text-gray-600">© 2025 نارنجی شاپ - تمامی حقوق محفوظ است</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // مدیریت منوی موبایل
+            const menuToggle = document.getElementById('menu-toggle');
+            const mobileMenu = document.getElementById('mobile-menu');
+            const mobileMenuOverlay = document.getElementById('mobile-menu-overlay');
+            const closeMenu = document.getElementById('close-menu');
+
+            function openMobileMenu() {
+                mobileMenu.classList.remove('translate-x-full');
+                mobileMenuOverlay.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            }
+
+            function closeMobileMenu() {
+                mobileMenu.classList.add('translate-x-full');
+                mobileMenuOverlay.classList.add('hidden');
+                document.body.style.overflow = 'auto';
+            }
+
+            if (menuToggle) menuToggle.addEventListener('click', openMobileMenu);
+            if (closeMenu) closeMenu.addEventListener('click', closeMobileMenu);
+            if (mobileMenuOverlay) mobileMenuOverlay.addEventListener('click', closeMobileMenu);
+
+            // انیمیشن fade-in
+            document.querySelector('.fade-in').classList.add('fade-in-visible');
+
+            // اعتبارسنجی فرم
+            const form = document.querySelector('form');
+            const inputs = form.querySelectorAll('input, select, textarea');
+            
+            inputs.forEach(input => {
+                input.addEventListener('blur', function() {
+                    if (!this.value && this.hasAttribute('required')) {
+                        this.classList.add('border-red-300', 'bg-red-50');
+                    } else {
+                        this.classList.remove('border-red-300', 'bg-red-50');
+                    }
+                });
+                
+                input.addEventListener('input', function() {
+                    if (this.value) {
+                        this.classList.remove('border-red-300', 'bg-red-50');
+                    }
+                });
+            });
+
+            // بستن منو با کلید ESC
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') closeMobileMenu();
+            });
+        });
+    </script>
+</body>
+</html>

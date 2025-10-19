@@ -1,0 +1,372 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>راهنمای خرید - نارنجی شاپ</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    
+    <style>
+        @font-face {
+            font-family: 'IranSans';
+            src: url('{% static "fonts/IranianSans.ttf" %}');
+        }
+        
+        body { 
+            font-family: 'IranSans', sans-serif; 
+            background-color: #fafafa;
+        }
+        
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.6s ease;
+        }
+        
+        .fade-in-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .guide-step {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            transition: all 0.3s ease;
+        }
+        
+        .guide-step:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+        }
+        
+        .step-number {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #fb923c, #ea580c);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 min-h-screen">
+
+    <!-- هدر -->
+    <nav class="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-30 backdrop-blur-sm bg-white/95">
+        <div class="max-w-screen-xl flex items-center justify-between mx-auto p-4">
+            <div class="flex items-center gap-3">
+                <button id="menu-toggle" class="md:hidden p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 17 14">
+                        <path stroke="currentColor" stroke-width="2" d="M1 1h15M1 7h15M1 13h15"/>
+                    </svg>
+                </button>
+                
+                <a href="{% url 'store:home' %}" class="flex items-center">
+                    <img src="../../../../media/logo/IMG_1538.PNG" class="h-8" alt="Narenji Logo" />
+                    <span class="hidden sm:block text-xl font-bold text-orange-600">نارنجی شاپ</span>
+                </a>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <div class="hidden sm:flex search-box bg-gray-100 rounded-lg px-4 py-2 transition-all duration-300 hover:bg-gray-200">
+                    <form action="{% url 'store:product_search' %}" method="get" class="flex items-center gap-2">
+                        <input type="text" name="q" placeholder="جستجوی محصولات..." 
+                               class="bg-transparent border-none outline-none text-sm w-40">
+                        <button type="submit" class="text-gray-500 hover:text-orange-500">
+                            <i class='bx bx-search'></i>
+                        </button>
+                    </form>
+                </div>
+                
+                <div class="flex items-center gap-3">
+                    <a href="{% url 'cart:cart_detail' %}" class="w-10 h-10 bg-gray-100 text-orange-500 rounded-full flex items-center justify-center hover:bg-orange-500 hover:text-white transition duration-300 relative">
+                        <i class='bx bx-basket'></i>
+                        {% if cart and cart|length > 0 %}
+                        <span class="absolute -top-1 -left-1 bg-orange-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center animate-pulse">
+                            {{ cart|length }}
+                        </span>
+                        {% endif %}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Overlay منوی موبایل -->
+    <div id="mobile-menu-overlay" class="fixed inset-0 bg-black/50 z-40 hidden backdrop-blur-sm"></div>
+
+    <!-- منوی موبایل -->
+    <div id="mobile-menu" class="fixed top-0 right-0 h-full w-80 bg-white shadow-2xl z-50 transform translate-x-full transition-transform duration-300">
+        <div class="flex justify-between items-center p-6 border-b bg-gradient-to-r from-orange-50 to-orange-100">
+            <span class="text-xl font-bold text-orange-600">منو نارنجی</span>
+            <button id="close-menu" class="text-gray-600 hover:text-gray-800 text-xl p-2 transition-colors">✖</button>
+        </div>
+        
+        <div class="p-4 border-b">
+            <form action="{% url 'store:product_search' %}" method="get" class="flex gap-2">
+                <input type="text" name="q" placeholder="جستجوی محصولات..." 
+                       class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400">
+                <button type="submit" class="bg-orange-500 hover:bg-orange-600 text-white px-3 py-2 rounded-lg transition-colors">
+                    <i class='bx bx-search'></i>
+                </button>
+            </form>
+        </div>
+        
+        <ul class="p-4 space-y-2">
+            <li>
+                <a href="{% url 'store:home' %}" class="flex items-center gap-3 p-3 hover:bg-orange-50 rounded-lg transition-all duration-200 group">
+                    <i class='bx bx-home-alt text-xl text-orange-500 group-hover:scale-110 transition-transform'></i>
+                    <span class="font-medium">خانه</span>
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'store:product_list' %}" class="flex items-center gap-3 p-3 hover:bg-orange-50 rounded-lg transition-all duration-200 group">
+                    <i class='bx bx-store text-xl text-orange-500 group-hover:scale-110 transition-transform'></i>
+                    <span class="font-medium">همه محصولات</span>
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'cart:cart_detail' %}" class="flex items-center gap-3 p-3 hover:bg-orange-50 rounded-lg transition-all duration-200 group">
+                    <i class='bx bx-basket text-xl text-orange-500 group-hover:scale-110 transition-transform'></i>
+                    <span class="font-medium">سبد خرید</span>
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'store:faq' %}" class="flex items-center gap-3 p-3 hover:bg-orange-50 rounded-lg transition-all duration-200 group">
+                    <i class='bx bx-help-circle text-xl text-orange-500 group-hover:scale-110 transition-transform'></i>
+                    <span class="font-medium">سوالات متداول</span>
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'store:shopping_guide' %}" class="flex items-center gap-3 p-3 bg-orange-50 rounded-lg transition-all duration-200 group">
+                    <i class='bx bx-book-open text-xl text-orange-500 group-hover:scale-110 transition-transform'></i>
+                    <span class="font-medium">راهنمای خرید</span>
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'store:contact' %}" class="flex items-center gap-3 p-3 hover:bg-orange-50 rounded-lg transition-all duration-200 group">
+                    <i class='bx bx-phone text-xl text-orange-500 group-hover:scale-110 transition-transform'></i>
+                    <span class="font-medium">تماس با ما</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- محتوای اصلی -->
+    <div class="max-w-4xl mx-auto px-4 py-8 fade-in">
+        <div class="text-center mb-12">
+            <h1 class="text-3xl font-bold text-gray-800 mb-4">📚 راهنمای کامل خرید از نارنجی شاپ</h1>
+            <p class="text-gray-600 text-lg">مراحل ساده و آسان برای خرید آنلاین</p>
+        </div>
+
+        <!-- مراحل خرید -->
+        <div class="space-y-6">
+            <!-- مرحله 1 -->
+            <div class="guide-step">
+                <div class="flex items-start gap-4">
+                    <div class="step-number">۱</div>
+                    <div class="flex-1">
+                        <h3 class="text-xl font-bold text-gray-800 mb-3">جستجو و انتخاب محصول</h3>
+                        <div class="text-gray-600 leading-7 space-y-3">
+                            <p>• از طریق دسته‌بندی‌ها یا جستجو، محصول مورد نظر خود را پیدا کنید</p>
+                            <p>• روی محصول کلیک کنید تا صفحه جزئیات آن باز شود</p>
+                            <p>• مشخصات، قیمت و تصاویر محصول را بررسی کنید</p>
+                            <p>• در صورت نیاز، رنگ و سایز مورد نظر را انتخاب کنید</p>
+                        </div>
+                        <div class="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                            <p class="text-blue-700 text-sm flex items-center gap-2">
+                                <i class='bx bx-info-circle'></i>
+                                <strong>نکته:</strong> می‌توانید از فیلترهای پیشرفته برای پیدا کردن دقیق‌تر محصولات استفاده کنید
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- مرحله 2 -->
+            <div class="guide-step">
+                <div class="flex items-start gap-4">
+                    <div class="step-number">۲</div>
+                    <div class="flex-1">
+                        <h3 class="text-xl font-bold text-gray-800 mb-3">افزودن به سبد خرید</h3>
+                        <div class="text-gray-600 leading-7 space-y-3">
+                            <p>• دکمه "افزودن به سبد خرید" را کلیک کنید</p>
+                            <p>• تعداد مورد نیاز را مشخص کنید</p>
+                            <p>• می‌توانید به خرید ادامه دهید یا به سبد خرید بروید</p>
+                            <p>• در سبد خرید می‌توانید محصولات را مدیریت کنید</p>
+                        </div>
+                        <div class="mt-4 p-4 bg-green-50 rounded-lg border border-green-200">
+                            <p class="text-green-700 text-sm flex items-center gap-2">
+                                <i class='bx bx-check-circle'></i>
+                                <strong>توجه:</strong> محصولات در سبد خرید تا ۲۴ ساعت برای شما رزرو می‌شوند
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- مرحله 3 -->
+            <div class="guide-step">
+                <div class="flex items-start gap-4">
+                    <div class="step-number">۳</div>
+                    <div class="flex-1">
+                        <h3 class="text-xl font-bold text-gray-800 mb-3">تکمیل اطلاعات سفارش</h3>
+                        <div class="text-gray-600 leading-7 space-y-3">
+                            <p>• به صفحه سبد خرید بروید و "تکمیل خرید" را کلیک کنید</p>
+                            <p>• اطلاعات شخصی (نام، تلفن، ایمیل) را وارد کنید</p>
+                            <p>• آدرس دقیق پستی خود را ثبت کنید</p>
+                            <p>• کد پستی ۱۰ رقمی را وارد کنید</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- مرحله 4 -->
+            <div class="guide-step">
+                <div class="flex items-start gap-4">
+                    <div class="step-number">۴</div>
+                    <div class="flex-1">
+                        <h3 class="text-xl font-bold text-gray-800 mb-3">انتخاب روش ارسال</h3>
+                        <div class="text-gray-600 leading-7 space-y-3">
+                            <p>• <strong>پست پیشتاز:</strong> ۴-۷ روز کاری - ۸۰,۰۰۰ تومان</p>
+                            <p>• <strong>پست ویژه:</strong> ۲-۳ روز کاری - ۱۴۰,۰۰۰ تومان</p>
+                            <p>• <strong>تیپاکس:</strong> ۲-۴ روز کاری - پست کرایه</p>
+                            <p>• <strong>ارسال رایگان:</strong> برای خریدهای بالای ۲۰۰,۰۰۰ تومان</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- مرحله 5 -->
+            <div class="guide-step">
+                <div class="flex items-start gap-4">
+                    <div class="step-number">۵</div>
+                    <div class="flex-1">
+                        <h3 class="text-xl font-bold text-gray-800 mb-3">انتخاب روش پرداخت</h3>
+                        <div class="text-gray-600 leading-7 space-y-3">
+                            <p>• <strong>پرداخت آنلاین:</strong> امن و سریع با کارت‌های شتاب</p>
+                            <p>• <strong>پرداخت در محل:</strong> پس از دریافت کالا</p>
+                            <p>• <strong>کارت به کارت:</strong> انتقال به شماره کارت اعلام شده</p>
+                            <p>• <strong>کیف پول:</strong> برای مشتریان دائمی</p>
+                        </div>
+                        <div class="mt-4 p-4 bg-purple-50 rounded-lg border border-purple-200">
+                            <p class="text-purple-700 text-sm flex items-center gap-2">
+                                <i class='bx bx-shield-alt'></i>
+                                <strong>امنیت:</strong> کلیه پرداخت‌های آنلاین با پروتکل SSL انجام می‌شود
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- مرحله 6 -->
+            <div class="guide-step">
+                <div class="flex items-start gap-4">
+                    <div class="step-number">۶</div>
+                    <div class="flex-1">
+                        <h3 class="text-xl font-bold text-gray-800 mb-3">پیگیری سفارش</h3>
+                        <div class="text-gray-600 leading-7 space-y-3">
+                            <p>• پس از ثبت سفارش، کد پیگیری دریافت می‌کنید</p>
+                            <p>• می‌توانید وضعیت سفارش را در پنل کاربری پیگیری کنید</p>
+                            <p>• در هر مرحله پیامک اطلاع‌رسانی ارسال می‌شود</p>
+                            <p>• پشتیبانی ۲۴ ساعته برای پاسخگویی به سوالات</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- نکات مهم -->
+        <div class="bg-yellow-50 border border-yellow-200 rounded-2xl p-6 mt-12">
+            <h3 class="text-xl font-bold text-yellow-800 mb-4 flex items-center gap-2">
+                <i class='bx bx-error-circle text-2xl'></i>
+                نکات مهم قبل از خرید
+            </h3>
+            <div class="text-yellow-700 space-y-2">
+                <p>• آدرس پستی خود را دقیق و کامل وارد کنید</p>
+                <p>• شماره تلفن همراه را صحیح وارد کنید</p>
+                <p>• در صورت پرداخت آنلاین، از اتصال اینترنتی مطمئن شوید</p>
+                <p>• کالا را در حضور مامور پست بررسی کنید</p>
+                <p>• رسید پرداخت را تا تحویل کالا نگهداری کنید</p>
+            </div>
+        </div>
+
+        <!-- راهنمای ویدیویی -->
+        <div class="bg-white rounded-2xl shadow-lg p-8 mt-8 text-center">
+            <i class='bx bx-video text-6xl text-orange-500 mb-4'></i>
+            <h3 class="text-2xl font-bold text-gray-800 mb-4">راهنمای ویدیویی خرید</h3>
+            <p class="text-gray-600 mb-6">برای درک بهتر مراحل خرید، ویدیوی آموزشی را مشاهده کنید</p>
+            <button class="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 px-6 rounded-lg transition duration-200 transform hover:scale-105">
+                <i class='bx bx-play-circle'></i>
+                مشاهده ویدیوی آموزشی
+            </button>
+        </div>
+    </div>
+
+    <!-- فوتر -->
+    <footer class="bg-white py-8 md:py-12 border-t border-gray-200 mt-12">
+        <div class="max-w-6xl mx-auto px-4 text-center">
+            <h2 class="text-2xl md:text-3xl font-bold text-gray-800 mb-6">نارنجی شاپ</h2>
+            
+            <div class="flex justify-center gap-4 md:gap-6 mb-6">
+                <a href="https://www.instagram.com/narenji.shopping" target="_blank" 
+                   class="w-10 h-10 md:w-12 md:h-12 bg-gray-100 text-orange-500 rounded-full flex items-center justify-center hover:bg-orange-500 hover:text-white transition duration-300">
+                    <i class='bx bxl-instagram text-xl md:text-2xl'></i>
+                </a>
+                <a href="https://t.me/narenjishopping" target="_blank" 
+                   class="w-10 h-10 md:w-12 md:h-12 bg-gray-100 text-orange-500 rounded-full flex items-center justify-center hover:bg-orange-500 hover:text-white transition duration-300">
+                    <i class='bx bxl-telegram text-xl md:text-2xl'></i>
+                </a>
+            </div>
+            
+            <p class="text-xs md:text-sm text-gray-600">© 2025 نارنجی شاپ - تمامی حقوق محفوظ است</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // مدیریت منوی موبایل
+            const menuToggle = document.getElementById('menu-toggle');
+            const mobileMenu = document.getElementById('mobile-menu');
+            const mobileMenuOverlay = document.getElementById('mobile-menu-overlay');
+            const closeMenu = document.getElementById('close-menu');
+
+            function openMobileMenu() {
+                mobileMenu.classList.remove('translate-x-full');
+                mobileMenuOverlay.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            }
+
+            function closeMobileMenu() {
+                mobileMenu.classList.add('translate-x-full');
+                mobileMenuOverlay.classList.add('hidden');
+                document.body.style.overflow = 'auto';
+            }
+
+            if (menuToggle) menuToggle.addEventListener('click', openMobileMenu);
+            if (closeMenu) closeMenu.addEventListener('click', closeMobileMenu);
+            if (mobileMenuOverlay) mobileMenuOverlay.addEventListener('click', closeMobileMenu);
+
+            // انیمیشن fade-in
+            document.querySelector('.fade-in').classList.add('fade-in-visible');
+
+            // بستن منو با کلید ESC
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') closeMobileMenu();
+            });
+        });
+    </script>
+</body>
+</html>

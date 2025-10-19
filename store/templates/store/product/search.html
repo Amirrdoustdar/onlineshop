@@ -1,0 +1,499 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نتایج جستجو - نارنجی شاپ</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    
+    <style>
+        @font-face {
+            font-family: 'IranSans';
+            src: url('{% static "fonts/IranianSans.ttf" %}');
+        }
+        
+        body { 
+            font-family: 'IranSans', sans-serif; 
+            background-color: #fafafa;
+        }
+        
+        .product-card {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+        }
+        
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        }
+
+        .search-highlight {
+            background-color: #fff3cd;
+            padding: 0 2px;
+            border-radius: 2px;
+        }
+
+        .filter-section {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .sort-dropdown {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .pagination-btn {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.75rem;
+            transition: all 0.3s ease;
+        }
+
+        .pagination-btn:hover {
+            background: #f97316;
+            color: white;
+            border-color: #f97316;
+        }
+
+        .pagination-btn.active {
+            background: #f97316;
+            color: white;
+            border-color: #f97316;
+        }
+
+        .loading-spinner {
+            display: none;
+        }
+
+        .search-loading .loading-spinner {
+            display: inline-block;
+        }
+
+        .search-loading .search-text {
+            display: none;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 min-h-screen">
+
+    <!-- هدر -->
+    <nav class="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-30">
+        <div class="max-w-screen-xl flex items-center justify-between mx-auto p-4">
+            <div class="flex items-center gap-3">
+                <a href="{% url 'store:home' %}" class="flex items-center">
+                        <img src="../../../../media/logo/IMG_1538.PNG" class="h-8" alt="Narenji Logo" />
+                </a>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <!-- جستجو -->
+                <div class="flex search-box bg-gray-100 rounded-lg px-4 py-2 flex-1 max-w-md transition-all duration-300 focus-within:bg-white focus-within:ring-2 focus-within:ring-orange-400">
+                    <form action="{% url 'store:product_search' %}" method="get" class="flex items-center gap-2 w-full" id="search-form">
+                        <input type="text" name="q" value="{{ query }}" 
+                               placeholder="جستجوی محصولات..." 
+                               class="bg-transparent border-none outline-none text-sm w-full"
+                               id="search-input">
+                        <button type="submit" class="text-gray-500 hover:text-orange-500 transition-colors" id="search-button">
+                            <div class="loading-spinner">
+                                <div class="animate-spin rounded-full h-4 w-4 border-2 border-orange-500 border-t-transparent"></div>
+                            </div>
+                            <i class='bx bx-search search-text'></i>
+                        </button>
+                    </form>
+                </div>
+                
+                <!-- منو -->
+                <div class="hidden md:flex gap-6 font-medium">
+                    <a href="{% url 'store:home' %}" class="text-gray-700 hover:text-orange-600 flex items-center gap-2 transition-colors">
+                        <i class='bx bx-home-alt'></i>خانه
+                    </a>
+                    <a href="{% url 'cart:cart_detail' %}" class="text-gray-700 hover:text-orange-600 flex items-center gap-2 transition-colors relative">
+                        <i class='bx bx-basket'></i>سبد خرید
+                        {% if cart and cart|length > 0 %}
+                        <span class="absolute -top-2 -right-2 bg-orange-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center animate-pulse">
+                            {{ cart|length }}
+                        </span>
+                        {% endif %}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- محتوای اصلی -->
+    <div class="max-w-7xl mx-auto px-4 py-8">
+        <!-- هدر نتایج -->
+        <div class="text-center mb-8 fade-in">
+            <h1 class="text-2xl md:text-3xl font-bold text-gray-800 mb-3">
+                {% if query %}
+                <i class='bx bx-search text-orange-500 mr-2'></i>
+                نتایج جستجو برای: 
+                <span class="text-orange-600">"{{ query }}"</span>
+                {% else %}
+                جستجو در محصولات
+                {% endif %}
+            </h1>
+            <p class="text-gray-600 flex items-center justify-center gap-2">
+                {% if products %}
+                <i class='bx bx-check-circle text-green-500'></i>
+                <span>{{ products_count }} محصول یافت شد</span>
+                {% else %}
+                <i class='bx bx-info-circle text-orange-500'></i>
+                <span>محصولی یافت نشد</span>
+                {% endif %}
+            </p>
+        </div>
+
+        {% if products %}
+        <!-- فیلترها و مرتب‌سازی -->
+        <div class="flex flex-col lg:flex-row gap-6 mb-8">
+            <!-- فیلترهای سایدبار -->
+            <div class="lg:w-1/4 space-y-4">
+                <div class="filter-section p-6">
+                    <h3 class="font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class='bx bx-filter-alt text-orange-500'></i>
+                        فیلترها
+                    </h3>
+                    
+                    <!-- فیلتر دسته‌بندی -->
+                    <div class="mb-6">
+                        <h4 class="font-medium text-gray-700 mb-3">دسته‌بندی</h4>
+                        <div class="space-y-2">
+                            {% for category in categories %}
+                            <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer hover:text-orange-500 transition-colors">
+                                <input type="checkbox" name="category" value="{{ category.slug }}" class="rounded text-orange-500">
+                                {{ category.name }}
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- فیلتر قیمت -->
+                    <div class="mb-6">
+                        <h4 class="font-medium text-gray-700 mb-3">محدوده قیمت</h4>
+                        <div class="space-y-3">
+                            <div class="flex gap-2">
+                                <input type="number" placeholder="از" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                                <input type="number" placeholder="تا" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                            </div>
+                            <button class="w-full bg-orange-500 hover:bg-orange-600 text-white py-2 rounded-lg text-sm transition-colors">
+                                اعمال فیلتر
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- فیلتر وضعیت موجودی -->
+                    <div>
+                        <h4 class="font-medium text-gray-700 mb-3">وضعیت موجودی</h4>
+                        <div class="space-y-2">
+                            <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer hover:text-green-500 transition-colors">
+                                <input type="checkbox" name="stock" value="available" class="rounded text-green-500">
+                                <span class="flex items-center gap-1">
+                                    <i class='bx bx-check-circle'></i>
+                                    کالاهای موجود
+                                </span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- محتوای اصلی نتایج -->
+            <div class="lg:w-3/4">
+                <!-- نوار مرتب‌سازی -->
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                    <div class="text-sm text-gray-600">
+                        نمایش 
+                        <span class="font-semibold">{{ products.start_index }}-{{ products.end_index }}</span>
+                        از 
+                        <span class="font-semibold">{{ products_count }}</span>
+                        نتیجه
+                    </div>
+                    
+                    <div class="relative">
+                        <select class="sort-dropdown px-4 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 appearance-none cursor-pointer">
+                            <option value="newest">جدیدترین</option>
+                            <option value="cheapest">ارزان‌ترین</option>
+                            <option value="expensive">گران‌ترین</option>
+                            <option value="popular">پربازدیدترین</option>
+                        </select>
+                        <i class='bx bx-chevron-down absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none'></i>
+                    </div>
+                </div>
+
+                <!-- لیست محصولات -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="search-results">
+                    {% for product in products %}
+                    <a href="{% url 'store:product_detail' product.slug %}" class="product-card block overflow-hidden group">
+                        <!-- تصویر محصول -->
+                        <div class="aspect-w-1 aspect-h-1 bg-gray-100 overflow-hidden relative">
+                            <img src="{{ product.get_primary_image }}" alt="{{ product.name }}" 
+                                 class="w-full h-48 object-cover group-hover:scale-105 transition duration-300"
+                                 loading="lazy">
+                            
+                            <!-- وضعیت محصول -->
+                            <div class="absolute top-3 left-3">
+                                {% if product.stock > 0 %}
+                                <span class="bg-green-500 text-white px-2 py-1 rounded-lg text-xs font-medium flex items-center gap-1">
+                                    <i class='bx bx-check-circle'></i>
+                                    موجود
+                                </span>
+                                {% else %}
+                                <span class="bg-red-500 text-white px-2 py-1 rounded-lg text-xs font-medium flex items-center gap-1">
+                                    <i class='bx bx-x-circle'></i>
+                                    ناموجود
+                                </span>
+                                {% endif %}
+                            </div>
+
+                            {% if product.old_price %}
+                            <div class="absolute top-3 right-3">
+                                <span class="bg-red-500 text-white px-2 py-1 rounded-lg text-xs font-medium">
+                                    {{ product.get_discount_percent }}% تخفیف
+                                </span>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- اطلاعات محصول -->
+                        <div class="p-4">
+                            <h3 class="font-semibold text-gray-800 mb-2 text-sm line-clamp-2 leading-6 group-hover:text-orange-600 transition-colors">
+                                {{ product.name }}
+                            </h3>
+                            
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-lg font-bold text-orange-600">{{ product.price|floatformat:0 }} تومان</span>
+                                    {% if product.old_price %}
+                                    <span class="text-gray-500 text-sm line-through">{{ product.old_price|floatformat:0 }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center justify-between text-xs text-gray-500">
+                                <span class="bg-gray-100 px-2 py-1 rounded">{{ product.category.name }}</span>
+                                <span class="flex items-center gap-1">
+                                    <i class='bx bx-time'></i>
+                                    {{ product.created_at|date:"Y/m/d" }}
+                                </span>
+                            </div>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+
+                <!-- صفحه‌بندی -->
+                {% if products.has_other_pages %}
+                <div class="flex justify-center items-center gap-2 mt-8">
+                    {% if products.has_previous %}
+                    <a href="?q={{ query }}&page={{ products.previous_page_number }}" 
+                       class="pagination-btn w-10 h-10 flex items-center justify-center hover:bg-orange-500 hover:text-white transition-colors">
+                        <i class='bx bx-chevron-right'></i>
+                    </a>
+                    {% endif %}
+
+                    {% for num in products.paginator.page_range %}
+                        {% if products.number == num %}
+                        <span class="pagination-btn active w-10 h-10 flex items-center justify-center">{{ num }}</span>
+                        {% else %}
+                        <a href="?q={{ query }}&page={{ num }}" 
+                           class="pagination-btn w-10 h-10 flex items-center justify-center hover:bg-orange-500 hover:text-white transition-colors">
+                            {{ num }}
+                        </a>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if products.has_next %}
+                    <a href="?q={{ query }}&page={{ products.next_page_number }}" 
+                       class="pagination-btn w-10 h-10 flex items-center justify-center hover:bg-orange-500 hover:text-white transition-colors">
+                        <i class='bx bx-chevron-left'></i>
+                    </a>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        {% else %}
+        <!-- حالت بدون نتیجه -->
+        <div class="bg-white rounded-2xl shadow-lg p-8 md:p-12 text-center max-w-2xl mx-auto fade-in">
+            <div class="text-6xl mb-6">🔍</div>
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">محصولی یافت نشد!</h2>
+            <p class="text-gray-600 mb-6 leading-7">
+                {% if query %}
+                متأسفانه هیچ محصولی با عبارت "<strong class="text-orange-600">{{ query }}</strong>" یافت نشد.
+                <br>پیشنهاد می‌کنیم:
+                {% else %}
+                لطفا عبارت مورد نظر خود را برای جستجو وارد کنید.
+                {% endif %}
+            </p>
+            
+            {% if query %}
+            <div class="bg-orange-50 border border-orange-200 rounded-xl p-4 mb-6 text-right">
+                <h4 class="font-semibold text-orange-800 mb-2">پیشنهادات جستجو:</h4>
+                <ul class="text-orange-700 text-sm space-y-1">
+                    <li>• املای عبارت را بررسی کنید</li>
+                    <li>• از کلمات کلیدی ساده‌تر استفاده کنید</li>
+                    <li>• جستجوی خود را در دسته‌بندی‌های مختلف امتحان کنید</li>
+                </ul>
+            </div>
+            {% endif %}
+            
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <a href="{% url 'store:home' %}" 
+                   class="inline-flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg transition duration-200 font-semibold group">
+                    <i class='bx bx-home group-hover:scale-110 transition-transform'></i>
+                    بازگشت به خانه
+                </a>
+                
+                <a href="{% url 'store:product_list' %}" 
+                   class="inline-flex items-center justify-center gap-2 bg-gray-100 text-gray-700 hover:bg-gray-200 px-6 py-3 rounded-lg transition duration-200 font-medium group">
+                    <i class='bx bx-store group-hover:scale-110 transition-transform'></i>
+                    مشاهده همه محصولات
+                </a>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- محصولات پیشنهادی -->
+        {% if suggested_products %}
+        <div class="mt-12 fade-in">
+            <div class="text-center mb-8">
+                <h2 class="text-2xl md:text-3xl font-bold text-gray-800 mb-3">محصولات پیشنهادی</h2>
+                <p class="text-gray-600">شاید این محصولات را دوست داشته باشید</p>
+            </div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {% for product in suggested_products %}
+                <a href="{% url 'store:product_detail' product.slug %}" class="product-card block overflow-hidden group">
+                    <div class="aspect-w-1 aspect-h-1 bg-gray-100 overflow-hidden">
+                        <img src="{{ product.get_primary_image }}" alt="{{ product.name }}" 
+                             class="w-full h-48 object-cover group-hover:scale-105 transition duration-300">
+                    </div>
+                    
+                    <div class="p-4">
+                        <h3 class="font-semibold text-gray-800 mb-2 text-sm line-clamp-2">{{ product.name }}</h3>
+                        
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-lg font-bold text-orange-600">{{ product.price|floatformat:0 }} تومان</span>
+                            {% if product.stock > 0 %}
+                            <span class="text-green-600 text-xs bg-green-100 px-2 py-1 rounded">موجود</span>
+                            {% else %}
+                            <span class="text-red-600 text-xs bg-red-100 px-2 py-1 rounded">ناموجود</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- فوتر -->
+    <footer class="bg-white py-8 md:py-12 border-t border-gray-200 mt-12">
+        <div class="max-w-6xl mx-auto px-4 text-center">
+            <h2 class="text-2xl md:text-3xl font-bold text-gray-800 mb-6">نارنجی شاپ</h2>
+            
+            <div class="flex justify-center gap-4 md:gap-6 mb-6">
+                <a href="https://www.instagram.com/narenji.shopping" target="_blank" 
+                   class="w-10 h-10 md:w-12 md:h-12 bg-gray-100 text-orange-500 rounded-full flex items-center justify-center hover:bg-orange-500 hover:text-white transition duration-300">
+                    <i class='bx bxl-instagram text-xl md:text-2xl'></i>
+                </a>
+                <a href="https://t.me/narenjishopping" target="_blank" 
+                   class="w-10 h-10 md:w-12 md:h-12 bg-gray-100 text-orange-500 rounded-full flex items-center justify-center hover:bg-orange-500 hover:text-white transition duration-300">
+                    <i class='bx bxl-telegram text-xl md:text-2xl'></i>
+                </a>
+            </div>
+            
+            <p class="text-xs md:text-sm text-gray-600">© 2025 نارنجی شاپ - تمامی حقوق محفوظ است</p>
+        </div>
+    </footer>
+
+    <script>
+        // مدیریت لودینگ جستجو
+        const searchForm = document.getElementById('search-form');
+        const searchButton = document.getElementById('search-button');
+        const searchInput = document.getElementById('search-input');
+
+        searchForm.addEventListener('submit', function() {
+            searchButton.classList.add('search-loading');
+        });
+
+        // هایلایت کردن متن جستجو
+        function highlightSearchText() {
+            const query = "{{ query }}";
+            if (query) {
+                const elements = document.querySelectorAll('.product-card h3');
+                elements.forEach(element => {
+                    const text = element.textContent;
+                    const regex = new RegExp(`(${query})`, 'gi');
+                    const highlighted = text.replace(regex, '<span class="search-highlight">$1</span>');
+                    element.innerHTML = highlighted;
+                });
+            }
+        }
+
+        // اعمال فیلترها
+        function applyFilters() {
+            // پیاده‌سازی فیلترها با AJAX
+            console.log('فیلترها اعمال شدند');
+        }
+
+        // انیمیشن fade-in
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver(function(entries) {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('fade-in-visible');
+                }
+            });
+        }, observerOptions);
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // هایلایت کردن متن
+            highlightSearchText();
+
+            // مشاهده عناصر برای انیمیشن
+            document.querySelectorAll('.fade-in').forEach(el => {
+                observer.observe(el);
+            });
+
+            // مدیریت فیلترها
+            document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                checkbox.addEventListener('change', applyFilters);
+            });
+        });
+
+        // اضافه کردن استایل برای انیمیشن
+        const style = document.createElement('style');
+        style.textContent = `
+            .fade-in {
+                opacity: 0;
+                transform: translateY(20px);
+                transition: all 0.6s ease;
+            }
+            .fade-in-visible {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+
+</body>
+</html>

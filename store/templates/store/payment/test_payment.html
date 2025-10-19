@@ -1,0 +1,108 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>پرداخت تست - نارنجی شاپ</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    
+    <style>
+        @font-face {
+            font-family: 'IranSans';
+            src: url('{% static "fonts/IranianSans.ttf" %}');
+        }
+        
+        body { 
+            font-family: 'IranSans', sans-serif; 
+            background-color: #fafafa;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 min-h-screen">
+
+    <!-- هدر مشابه صفحه اصلی -->
+    <nav class="bg-white border-b border-gray-200 shadow-sm">
+        <div class="max-w-screen-xl flex items-center justify-between mx-auto p-4">
+            <div class="flex items-center gap-3">
+                <a href="{% url 'store:home' %}" class="flex items-center">
+                    <img src="../../../../media/logo/IMG_1538.PNG" class="h-8" alt="Narenji Logo" />
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- محتوای اصلی -->
+    <div class="max-w-md mx-auto px-4 py-8">
+        <div class="bg-white rounded-2xl shadow-lg p-6 md:p-8 text-center">
+            <div class="text-6xl mb-6">🧪</div>
+            <h1 class="text-2xl md:text-3xl font-bold text-gray-800 mb-4">حالت تست پرداخت</h1>
+            <p class="text-gray-600 mb-6">درگاه شاپرک در حال تایید است</p>
+            
+            <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-6">
+                <p class="text-yellow-700 text-sm">
+                    این یک پرداخت آزمایشی است. سفارش شما ثبت شده اما پرداخت واقعی انجام نمی‌شود.
+                </p>
+            </div>
+            
+            <!-- اطلاعات سفارش -->
+            <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="text-gray-600">مبلغ قابل پرداخت:</span>
+                    <span class="text-xl font-bold text-orange-600">{{ amount }} تومان</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-600">شماره سفارش:</span>
+                    <span class="font-bold text-gray-800">#{{ order_id }}</span>
+                </div>
+            </div>
+            
+            <!-- دکمه‌های شبیه‌سازی -->
+            <div class="space-y-3">
+                <button onclick="simulateSuccess()" 
+                        class="w-full bg-green-500 hover:bg-green-600 text-white py-3 rounded-lg font-semibold transition duration-200 flex items-center justify-center gap-2">
+                    <i class='bx bx-check-circle'></i>
+                    پرداخت موفق ✅
+                </button>
+                
+                <button onclick="simulateFailure()" 
+                        class="w-full bg-red-500 hover:bg-red-600 text-white py-3 rounded-lg font-semibold transition duration-200 flex items-center justify-center gap-2">
+                    <i class='bx bx-x-circle'></i>
+                    پرداخت ناموفق ❌
+                </button>
+            </div>
+            
+            <!-- راهنمایی -->
+            <div class="mt-6 pt-4 border-t border-gray-200">
+                <p class="text-xs text-gray-500">
+                    برای تست فرآیند خرید، روی "پرداخت موفق" کلیک کنید
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- فوتر -->
+    <footer class="bg-white py-8 border-t border-gray-200 mt-12">
+        <div class="max-w-6xl mx-auto px-4 text-center">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">نارنجی شاپ</h2>
+            <p class="text-sm text-gray-600">© 2025 نارنجی شاپ - تمامی حقوق محفوظ است</p>
+        </div>
+    </footer>
+
+    <script>
+        function simulateSuccess() {
+            // شبیه‌سازی پرداخت موفق
+            window.location.href = "{% url 'orders:order_success' %}?order_id={{ order_id }}&status=success";
+        }
+        
+        function simulateFailure() {
+            // شبیه‌سازی پرداخت ناموفق
+            window.location.href = "{% url 'orders:order_created' %}?order_id={{ order_id }}&status=failed";
+        }
+    </script>
+
+</body>
+</html>
